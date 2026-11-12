@@ -22,17 +22,24 @@ import { getWeatherDisplay } from '../utils/weatherCodes'
  *     humidity: string,
  *     windSpeed: string,
  *   },
+ *   favouriteButton?: import('react').ReactNode,
  * }} props
  */
-export default function CurrentWeather({ city, current, units }) {
+export default function CurrentWeather({ city, current, units, favouriteButton }) {
   const { label, icon: Icon } = getWeatherDisplay(current.code, current.isDay)
   const location = [city.name, city.admin1, city.country].filter(Boolean).join(', ')
 
   return (
-    <section aria-labelledby="current-weather-heading" className="w-full">
-      <h2 id="current-weather-heading" className="text-xl font-semibold text-neutral-50 sm:text-2xl">
-        {location}
-      </h2>
+    <section aria-labelledby="current-weather-heading" className="w-full min-w-0">
+      <div className="flex items-start justify-between gap-3">
+        <h2
+          id="current-weather-heading"
+          className="min-w-0 text-xl font-semibold text-neutral-50 sm:text-2xl"
+        >
+          {location}
+        </h2>
+        {favouriteButton}
+      </div>
 
       <div className="mt-4 flex flex-wrap items-end gap-4 sm:gap-6">
         <p className="text-5xl font-semibold tracking-tight text-neutral-50 sm:text-6xl">

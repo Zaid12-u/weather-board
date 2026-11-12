@@ -3,45 +3,43 @@ import CitySearch from './components/CitySearch'
 import CurrentWeather from './components/CurrentWeather'
 import EmptyState from './components/EmptyState'
 import ErrorState from './components/ErrorState'
+import FavouriteButton from './components/FavouriteButton'
+import FavouritesPanel from './components/FavouritesPanel'
 import Forecast from './components/Forecast'
 import WeatherSkeleton from './components/WeatherSkeleton'
+import { useFavourites } from './hooks/useFavourites'
 import { useWeather } from './hooks/useWeather'
+import { safeGet, safeSet } from './utils/storage'
 
 const LAST_CITY_KEY = 'weatherboard:lastCity'
 
 function readLastCity() {
-  try {
-    const raw = localStorage.getItem(LAST_CITY_KEY)
-    if (!raw) return null
-    const parsed = JSON.parse(raw)
-    if (
-      parsed &&
-      typeof parsed.latitude === 'number' &&
-      typeof parsed.longitude === 'number' &&
-      typeof parsed.name === 'string'
-    ) {
-      return parsed
-    }
-  } catch {
-    // ignore quota / private mode / bad JSON
+  const parsed = safeGet(LAST_CITY_KEY, null)
+  if (
+    parsed &&
+    typeof parsed.latitude === 'number' &&
+    typeof parsed.longitude === 'number' &&
+    typeof parsed.name === 'string'
+  ) {
+    return parsed
   }
   return null
-}
-
-function writeLastCity(city) {
-  try {
-    localStorage.setItem(LAST_CITY_KEY, JSON.stringify(city))
-  } catch {
-    // ignore quota / private mode
-  }
 }
 
 function App() {
   const [selectedCity, setSelectedCity] = useState(readLastCity)
   const { data, loading, error, refetch } = useWeather(selectedCity)
+  const {
+    favourites,
+    addFavourite,
+    removeFavourite,
+    isFavourite,
+    storageAvailable,
+    maxFavourites,
+  } = useFavourites()
 
   useEffect(() => {
-    if (selectedCity) writeLastCity(selectedCity)
+    if (selectedCity) safeSet(LAST_CITY_KEY, selectedCity)
   }, [selectedCity])
 
   function handleSelectCity(city) {
@@ -58,25 +56,43 @@ function App() {
       <main className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
         <CitySearch onSelect={handleSelectCity} />
 
-        <div className="mt-8">
-          {!selectedCity ? <EmptyState /> : null}
+        <div className="mt-8 flex min-w-0 flex-col gap-8 xl:grid xl:grid-cols-[minmax(0,16rem)_minmax(0,1fr)] xl:items-start xl:gap-10">
+          <FavouritesPanel
+            favourites={favourites}
+            maxFavourites={maxFavourites}
+            storageAvailable={storageAvailable}
+            onSelect={handleSelectCity}
+            onRemove={removeFavourite}
+          />
 
-          {selectedCity && loading ? <WeatherSkeleton /> : null}
+          <div className="min-w-0">
+            {!selectedCity ? <EmptyState /> : null}
 
-          {selectedCity && !loading && error ? (
-            <ErrorState type={error.type} onRetry={refetch} />
-          ) : null}
+            {selectedCity && loading ? <WeatherSkeleton /> : null}
 
-          {selectedCity && !loading && !error && data ? (
-            <div className="space-y-8">
-              <CurrentWeather
-                city={selectedCity}
-                current={data.current}
-                units={data.units}
-              />
-              <Forecast daily={data.daily} units={data.units} />
-            </div>
-          ) : null}
+            {selectedCity && !loading && error ? (
+              <ErrorState type={error.type} onRetry={refetch} />
+            ) : null}
+
+            {selectedCity && !loading && !error && data ? (
+              <div className="space-y-8">
+                <CurrentWeather
+                  city={selectedCity}
+                  current={data.current}
+                  units={data.units}
+                  favouriteButton={
+                    <FavouriteButton
+                      city={selectedCity}
+                      isFavourite={isFavourite(selectedCity.id)}
+                      addFavourite={addFavourite}
+                      removeFavourite={removeFavourite}
+                    />
+                  }
+                />
+                <Forecast daily={data.daily} units={data.units} />
+              </div>
+            ) : null}
+          </div>
         </div>
       </main>
     </div>
