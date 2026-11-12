@@ -7,9 +7,12 @@ import FavouriteButton from './components/FavouriteButton'
 import FavouritesPanel from './components/FavouritesPanel'
 import Forecast from './components/Forecast'
 import OfflineBanner from './components/OfflineBanner'
+import ReminderPanel from './components/ReminderPanel'
 import WeatherSkeleton from './components/WeatherSkeleton'
 import { useFavourites } from './hooks/useFavourites'
 import { useOnlineStatus } from './hooks/useOnlineStatus'
+import { useReminder } from './hooks/useReminder'
+import { useReminderSync } from './hooks/useReminderSync'
 import { useWeather } from './hooks/useWeather'
 import { safeGet, safeSet } from './utils/storage'
 
@@ -40,6 +43,13 @@ function App() {
     storageAvailable,
     maxFavourites,
   } = useFavourites()
+
+  const reminder = useReminder()
+  useReminderSync({
+    settings: reminder.settings,
+    permission: reminder.permission,
+    city: selectedCity,
+  })
 
   const isOnline = useOnlineStatus()
   const wasOffline = useRef(false)
@@ -76,13 +86,22 @@ function App() {
         <CitySearch onSelect={handleSelectCity} />
 
         <div className="mt-8 flex min-w-0 flex-col gap-8 xl:grid xl:grid-cols-[minmax(0,16rem)_minmax(0,1fr)] xl:items-start xl:gap-10">
-          <FavouritesPanel
-            favourites={favourites}
-            maxFavourites={maxFavourites}
-            storageAvailable={storageAvailable}
-            onSelect={handleSelectCity}
-            onRemove={removeFavourite}
-          />
+          <div className="min-w-0 space-y-6">
+            <FavouritesPanel
+              favourites={favourites}
+              maxFavourites={maxFavourites}
+              storageAvailable={storageAvailable}
+              onSelect={handleSelectCity}
+              onRemove={removeFavourite}
+            />
+            <ReminderPanel
+              supported={reminder.supported}
+              permission={reminder.permission}
+              settings={reminder.settings}
+              update={reminder.update}
+              requestPermission={reminder.requestPermission}
+            />
+          </div>
 
           <div className="min-w-0">
             {!selectedCity ? <EmptyState /> : null}
