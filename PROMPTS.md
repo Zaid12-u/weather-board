@@ -65,3 +65,66 @@ Context: WeatherBoard, React (Vite, JS) + Tailwind v4 in /client. CitySearch alr
 5. App.jsx: wire it all together: CitySearch -> selected city -> useWeather -> loading / error / data / empty states. Save the last selected city to localStorage under the key "weatherboard:lastCity" (wrapped in try/catch) and restore it on load.
 
 Keep the dark neutral palette, mobile-first, touch targets at least 44px, no horizontal scroll at 375/768/1280px. Run the dev server and fix any errors.
+ 
+ Prompt #4
+ Context: WeatherBoard, React (Vite, JS) + Tailwind v4 in /client. City search and weather display already work. Implement ONLY the favourite cities feature. No PWA or notifications yet.
+
+1. src/utils/storage.js
+   - safeGet(key, fallback), safeSet(key, value), safeRemove(key), all wrapped in try/catch.
+   - export isStorageAvailable() that tests a write/remove and returns true/false.
+   - Refactor the existing "weatherboard:lastCity" code in App.jsx to use these helpers.
+
+2. src/hooks/useFavourites.js
+   - Persist in localStorage under "weatherboard:favourites". Each item: { id, name, admin1, country, latitude, longitude, timezone }.
+   - Max 5 favourites. Expose: favourites, addFavourite(city), removeFavourite(id), isFavourite(id), storageAvailable.
+   - addFavourite returns { ok: false, reason: "limit" | "duplicate" | "storage" } on failure so the UI can explain it.
+   - If localStorage is unavailable, keep favourites in memory for the session only (no crash).
+
+3. src/components/FavouriteButton.jsx
+   - A star toggle shown on the CurrentWeather card. Filled when the city is a favourite.
+   - Adding: if 5 are saved, show an inline message "You can save up to 5 cities. Remove one to add another." Do not use alert().
+   - Removing from here also goes through the confirm dialog.
+   - aria-pressed, aria-label, 44x44px minimum touch target.
+
+4. src/components/FavouritesPanel.jsx
+   - Quick-access panel listing saved cities as cards/chips. Clicking one loads that city's weather.
+   - Each item has a remove (X) button.
+   - Empty state: "No favourites yet. Tap the star on a city to save it."
+   - Shows a counter "3/5".
+   - If storage is unavailable, show a small notice: "Favourites can't be saved on this browser, so they will be lost when you close the tab."
+
+5. src/components/ConfirmDialog.jsx
+   - Accessible modal (role="dialog", aria-modal, focus moves in and returns on close, Escape closes, click on backdrop closes).
+   - Text: "Remove {city} from favourites?" with Cancel and Remove buttons. Remove removes only after confirmation.
+
+6. Wire into App.jsx: panel placed under the search (above the weather on mobile, a side column on desktop at 1280px). No horizontal scroll at 375/768/1280px, touch targets at least 44px.
+
+Do not add libraries. Run the dev server and fix any errors.
+
+Prompt # 5
+Context: WeatherBoard, React (Vite, JS) + Tailwind v4 in /client. Search, weather display and favourites work. Implement ONLY PWA + offline support. No push notifications yet, but structure the service worker so notifications can be added to it in the next step.
+
+1. Install vite-plugin-pwa and workbox-precaching/workbox-routing/workbox-strategies/workbox-expiration (dev deps where applicable). Use the injectManifest strategy with a custom service worker at src/sw.js, so I can add push/notification code to the same file later. Register it via the plugin (registerType: "autoUpdate"). Enable devOptions so it can be tested.
+
+2. Web manifest (configured in vite.config.js): name "WeatherBoard", short_name "WeatherBoard", description, start_url "/", scope "/", display "standalone", theme_color and background_color matching the dark palette, and icons 192x192 and 512x512 (plus a 512 maskable). Also add apple-touch-icon and the theme-color meta in index.html.
+
+3. Icons: create a simple, clean SVG app icon (weather cloud/sun on dark background) at public/icon.svg and generate the PNGs (pwa-192x192.png, pwa-512x512.png, maskable-512x512.png, apple-touch-icon.png) using @vite-pwa/assets-generator as a dev dependency. Add an npm script "generate-icons".
+
+4. src/sw.js:
+   - precacheAndRoute(self.__WB_MANIFEST) for the app shell, plus a navigation fallback to index.html (NavigationRoute).
+   - Runtime caching for https://api.open-meteo.com/ with NetworkFirst (networkTimeoutSeconds 5), cache name "weather-api", ExpirationPlugin maxEntries 1 so only the last viewed city's weather is kept.
+   - Runtime caching for https://geocoding-api.open-meteo.com/ with NetworkOnly (do not cache search).
+   - self.skipWaiting() and clientsClaim() behavior.
+
+5. App-level offline fallback in src/hooks/useWeather.js:
+   - On every successful fetch, save { cityId, data, savedAt } to localStorage "weatherboard:lastWeather" via the safe storage helpers.
+   - If a fetch fails with a network error and the saved data matches the selected city, show the saved data with a visible notice "Offline: showing data saved at {time}" instead of the error state. If no saved data matches, show the normal offline error.
+
+6. src/hooks/useOnlineStatus.js using navigator.onLine plus the online/offline window events.
+   src/components/OfflineBanner.jsx: a fixed, accessible (role="status") banner at the top: "You're offline. Showing the last saved city." It appears when offline and disappears when back online, with no layout jump. When back online, automatically refetch the current city.
+
+7. Make sure the CitySearch offline error message still works.
+
+Do not add other libraries. Run npm run build and fix any errors or warnings.
+
+
