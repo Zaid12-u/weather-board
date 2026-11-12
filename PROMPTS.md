@@ -37,3 +37,31 @@ Context: WeatherBoard, React (Vite, JS) + Tailwind v4 in /client. Implement ONLY
 4. In App.jsx render CitySearch under the header, and below it show the selected city as simple text (name, country, lat/lon) as a temporary placeholder.
 
 Style with Tailwind, dark neutral palette, mobile-first, no horizontal scroll. Do not add new libraries. Run the dev server and fix any errors.
+
+Prompt # 3
+Context: WeatherBoard, React (Vite, JS) + Tailwind v4 in /client. CitySearch already works and App.jsx has the selected city (name, admin1, country, latitude, longitude, timezone). Implement ONLY real weather fetching and display. No favourites, PWA or notifications yet.
+
+1. src/services/weather.js
+   - export async function getWeather({ latitude, longitude }, signal) calling https://api.open-meteo.com/v1/forecast with:
+     current=temperature_2m,relative_humidity_2m,apparent_temperature,wind_speed_10m,weather_code,is_day
+     daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max
+     forecast_days=5, timezone=auto
+   - Return a normalized object: { current: { temp, feelsLike, humidity, windSpeed, code, isDay, time }, daily: [{ date, code, max, min, rainChance }], units }.
+   - Throw typed errors: { type: "network" } if fetch fails, { type: "api" } if response is not ok.
+
+2. src/utils/weatherCodes.js
+   - Map WMO weather codes to { label, icon } (clear, partly cloudy, fog, drizzle, rain, snow, thunderstorm, etc.), with day/night variants for clear/partly cloudy. Use lucide-react icons (install lucide-react, the only new library allowed).
+
+3. src/hooks/useWeather.js
+   - useWeather(city): returns { data, loading, error, refetch }. Use AbortController to cancel stale requests and avoid race conditions when the city changes quickly.
+
+4. Components in src/components:
+   - CurrentWeather.jsx: city name + region + country, big temperature, condition label + icon, feels like, humidity, wind speed (km/h).
+   - Forecast.jsx: 5 day cards (weekday, icon, max/min, rain chance). Horizontal grid that wraps correctly: 2 columns on mobile, 5 on desktop. No horizontal scroll.
+   - WeatherSkeleton.jsx: loading skeleton matching the layout.
+   - ErrorState.jsx: friendly messages with a Retry button. Network: "You appear to be offline. Check your connection and retry." API: "The weather service is not responding right now. Try again in a moment." Never show "Something went wrong".
+   - EmptyState.jsx: shown before any city is selected, with a short helpful message ("Search for a city to see its weather").
+
+5. App.jsx: wire it all together: CitySearch -> selected city -> useWeather -> loading / error / data / empty states. Save the last selected city to localStorage under the key "weatherboard:lastCity" (wrapped in try/catch) and restore it on load.
+
+Keep the dark neutral palette, mobile-first, touch targets at least 44px, no horizontal scroll at 375/768/1280px. Run the dev server and fix any errors.
