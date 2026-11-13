@@ -1,4 +1,6 @@
 import { Droplets } from 'lucide-react'
+import { useUnit } from '../context/UnitContext'
+import { formatTemp } from '../utils/units'
 import { getWeatherDisplay } from '../utils/weatherCodes'
 
 /**
@@ -18,6 +20,9 @@ import { getWeatherDisplay } from '../utils/weatherCodes'
  * }} props
  */
 export default function Forecast({ daily, units }) {
+  const { unit } = useUnit()
+  const unitName = unit === 'f' ? 'Fahrenheit' : 'Celsius'
+
   return (
     <section aria-labelledby="forecast-heading" className="w-full">
       <h2 id="forecast-heading" className="text-lg font-semibold text-neutral-50 sm:text-xl">
@@ -42,12 +47,10 @@ export default function Forecast({ daily, units }) {
                 <span className="sr-only">{label}</span>
               </div>
               <p className="text-sm text-neutral-100">
-                <span className="font-medium">{Math.round(day.max)}°</span>
+                <span className="font-medium">{formatTemp(day.max, unit)}</span>
                 <span className="text-neutral-500"> / </span>
-                <span className="text-neutral-400">{Math.round(day.min)}°</span>
-                <span className="sr-only">
-                  {units.max} high, {units.min} low
-                </span>
+                <span className="text-neutral-400">{formatTemp(day.min, unit)}</span>
+                <span className="sr-only"> high and low in {unitName}</span>
               </p>
               <p className="mt-auto flex min-h-11 items-center gap-1.5 text-xs text-neutral-400">
                 <Droplets className="size-3.5 shrink-0" aria-hidden="true" />

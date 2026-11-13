@@ -1,4 +1,6 @@
 import { Droplets, Thermometer, Wind } from 'lucide-react'
+import { useUnit } from '../context/UnitContext'
+import { formatTemp } from '../utils/units'
 import { getWeatherDisplay } from '../utils/weatherCodes'
 
 /**
@@ -26,8 +28,10 @@ import { getWeatherDisplay } from '../utils/weatherCodes'
  * }} props
  */
 export default function CurrentWeather({ city, current, units, favouriteButton }) {
+  const { unit } = useUnit()
   const { label, icon: Icon } = getWeatherDisplay(current.code, current.isDay)
   const location = [city.name, city.admin1, city.country].filter(Boolean).join(', ')
+  const unitLabel = unit === 'f' ? 'F' : 'C'
 
   return (
     <section aria-labelledby="current-weather-heading" className="w-full min-w-0">
@@ -43,8 +47,10 @@ export default function CurrentWeather({ city, current, units, favouriteButton }
 
       <div className="mt-4 flex flex-wrap items-end gap-4 sm:gap-6">
         <p className="text-5xl font-semibold tracking-tight text-neutral-50 sm:text-6xl">
-          {Math.round(current.temp)}
-          <span className="text-3xl font-medium text-neutral-400 sm:text-4xl">{units.temp}</span>
+          {formatTemp(current.temp, unit).replace('°', '')}
+          <span className="text-3xl font-medium text-neutral-400 sm:text-4xl">
+            °{unitLabel}
+          </span>
         </p>
         <div className="flex min-h-11 items-center gap-2 text-neutral-200">
           <Icon className="size-8 shrink-0 text-neutral-300 sm:size-10" aria-hidden="true" />
@@ -56,8 +62,8 @@ export default function CurrentWeather({ city, current, units, favouriteButton }
         <li className="flex min-h-11 items-center gap-3 text-sm text-neutral-300 sm:text-base">
           <Thermometer className="size-5 shrink-0 text-neutral-500" aria-hidden="true" />
           <span>
-            Feels like {Math.round(current.feelsLike)}
-            {units.feelsLike}
+            Feels like {formatTemp(current.feelsLike, unit)}
+            {unitLabel}
           </span>
         </li>
         <li className="flex min-h-11 items-center gap-3 text-sm text-neutral-300 sm:text-base">
