@@ -126,5 +126,13 @@ Context: WeatherBoard, React (Vite, JS) + Tailwind v4 in /client. Search, weathe
 7. Make sure the CitySearch offline error message still works.
 
 Do not add other libraries. Run npm run build and fix any errors or warnings.
+                         ***********************************
+
+         
+
+## Note: agent limit reached after Prompt 5
+
+The Cursor free-plan usage limit was hit while Prompt 5 (PWA + offline support) was running, and it stayed active until after the deadline. The agent had only partly finished that step, so I completed the rest of the project manually: the service worker and PWA configuration, the offline banner wiring, the daily reminder notifications, the °C/°F toggle, the dark/light theme, and the README. For this manual work I used Claude (a chat assistant) for code suggestions, and I reviewed and tested each step in the browser myself. Because these steps were not run through an agentic IDE, there are no agent prompts for them.
+
 
 

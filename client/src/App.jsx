@@ -8,12 +8,14 @@ import FavouritesPanel from './components/FavouritesPanel'
 import Forecast from './components/Forecast'
 import OfflineBanner from './components/OfflineBanner'
 import ReminderPanel from './components/ReminderPanel'
+import ThemeToggle from './components/ThemeToggle'
 import UnitToggle from './components/UnitToggle'
 import WeatherSkeleton from './components/WeatherSkeleton'
 import { useFavourites } from './hooks/useFavourites'
 import { useOnlineStatus } from './hooks/useOnlineStatus'
 import { useReminder } from './hooks/useReminder'
 import { useReminderSync } from './hooks/useReminderSync'
+import { useTheme } from './hooks/useTheme'
 import { useWeather } from './hooks/useWeather'
 import { safeGet, safeSet } from './utils/storage'
 
@@ -33,6 +35,7 @@ function readLastCity() {
 }
 
 function App() {
+  const { theme, toggle: toggleTheme } = useTheme()
   const [selectedCity, setSelectedCity] = useState(readLastCity)
   const { data, loading, error, refetch, offlineSavedAt } =
     useWeather(selectedCity)
@@ -82,7 +85,10 @@ function App() {
         <h1 className="text-lg font-semibold tracking-tight text-neutral-50 sm:text-xl">
           WeatherBoard
         </h1>
-        <UnitToggle />
+        <div className="flex items-center gap-2">
+          <UnitToggle />
+          <ThemeToggle theme={theme} onToggle={toggleTheme} />
+        </div>
       </header>
       <main className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
         <CitySearch onSelect={handleSelectCity} />
